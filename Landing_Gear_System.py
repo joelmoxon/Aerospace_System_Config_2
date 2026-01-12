@@ -9,15 +9,16 @@ class GearState(Enum):
     TRANSITIONING_UP = auto()
     FAULT = auto()
 
-# Simulated Fault Injector
+# Simulated fault injection
 class FaultInjector:
     fault = False
+    fault_delay = 3 # additional gear movement time when fault occurs (seconds)
 
 class LandingGearController:
 
     # Requirements PER-02 and PER-03
-    GEAR_DOWN_TIME = 5 #seconds
-    GEAR_UP_TIME = 7 #seconds
+    GEAR_DOWN_TIME = 5 # seconds
+    GEAR_UP_TIME = 7 # seconds
 
     def __init__(self):
         self.state = GearState.UP_LOCKED
@@ -34,34 +35,58 @@ class LandingGearController:
             print("\n[SYSTEM] No fault to clear")
 
     def move_gear(self, target_state):
-        if FaultInjector.fault:
-            self.previous_state = self.state
-            self.state = GearState.FAULT
-            self.log("Fault detected - command rejected")
-            return
-        
+         
         #Gear DOWN sequence
         if target_state == GearState.DOWN_LOCKED:
             if self.state != GearState.UP_LOCKED:
-                self.log("Gear down command rejected")
+                self.log("Command rejected - Gear already DOWN")
                 return
         
             self.state = GearState.TRANSITIONING_DOWN
             self.log("Gear deploying...")
-            time.sleep(self.GEAR_DOWN_TIME)
-
+            
+            # Check for fault during DOWN movement
+            if FaultInjector.fault:
+                time.sleep(self.GEAR_DOWN_TIME)
+                self.log("*** ALERT: Gear down time exceeded normal time")
+                self.log("*** DIAGNOSIS: Low hydraulic pressure")
+                self.log("*** Activating backup hydraulic pump ***")
+                self.backup_pump_active = True
+                time.sleep(FaultInjector.fault_delay)
+                self.log("*** Operation complete ***")
+                self.backup_pump_active = False
+                FaultInjector.fault = False
+                self.log("*** Fault cleared ***")
+            else:
+                time.sleep(self.GEAR_DOWN_TIME)
+            
             self.state = GearState.DOWN_LOCKED
-            self.log("Gear down and locked")
+            self.log ("Gear down and locked")
+
 
         #Gear UP sequence
         elif target_state == GearState.UP_LOCKED:
             if self.state != GearState.DOWN_LOCKED:
-                self.log("Gear up command rejected")
+                self.log("Command rejected - Gear already UP")
                 return
             
             self.state = GearState.TRANSITIONING_UP
             self.log("Gear retracting...")
-            time.sleep(self.GEAR_UP_TIME)
+           
+        # Check for fault during UP movement
+            if FaultInjector.fault:
+                time.sleep(self.GEAR_UP_TIME)
+                self.log("*** ALERT: Gear up time exceeded normal time")
+                self.log("*** DIAGNOSIS: Low hydraulic pressure")
+                self.log("*** Activating backup hydraulic pump ***")
+                self.backup_pump_active = True
+                time.sleep(FaultInjector.fault_delay)
+                self.log("*** Operation complete ***")
+                self.backup_pump_active = False
+                FaultInjector.fault = False
+                self.log("*** Fault cleared ***")
+            else:
+                time.sleep(self.GEAR_DOWN_TIME)
 
             self.state = GearState.UP_LOCKED
             self.log("Gear up and locked")
@@ -72,6 +97,7 @@ class LandingGearController:
     def command_gear_up(self):
         self.move_gear(GearState.UP_LOCKED)
 
+# Control menu
 def show_menu():
     print("\n" + "=" * 30)
     print("LANDING GEAR CONTROL SYSTEM")
