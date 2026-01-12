@@ -1,10 +1,6 @@
 from enum import Enum, auto
 import time
 
-# Fault injector
-class FaultInjector:
-    fault = False
-
 # Landing gear states
 class GearState(Enum):
     UP_LOCKED = auto()
@@ -12,6 +8,10 @@ class GearState(Enum):
     DOWN_LOCKED = auto()
     TRANSITIONING_UP = auto()
     FAULT = auto()
+
+# Simulated Fault Injector
+class FaultInjector:
+    fault = False
 
 class LandingGearController:
 
@@ -21,12 +21,21 @@ class LandingGearController:
 
     def __init__(self):
         self.state = GearState.UP_LOCKED
+        self.previous_state = GearState.UP_LOCKED
 
     def log(self, message):
         print(f"[{self.state.name}] {message}")
 
+    def clear_fault(self):
+        if self.state == GearState.FAULT:
+            self.state = self.previous_state
+            self.log("Fault cleared - system restored")
+        else:
+            print("\n[SYSTEM] No fault to clear")
+
     def move_gear(self, target_state):
         if FaultInjector.fault:
+            self.previous_state = self.state
             self.state = GearState.FAULT
             self.log("Fault detected - command rejected")
             return
@@ -63,8 +72,37 @@ class LandingGearController:
     def command_gear_up(self):
         self.move_gear(GearState.UP_LOCKED)
 
-controller = LandingGearController()
-# ENTER COMMAND SEQUENCE TO CONTROL LANDING GEAR
+def show_menu():
+    print("\n" + "=" * 30)
+    print("LANDING GEAR CONTROL SYSTEM")
+    print("=" * 30)
+    print("1. Gear DOWN")
+    print("2. Gear UP")
+    print("3. Inject Fault")
+    print("4. clear fault")
+    print("=" * 30)
 
-controller.command_gear_up()
-controller.command_gear_up()
+def main():
+    controller = LandingGearController()
+
+    print("\n*** SYSTEM INITIALISING ***")
+    print("Landing gear initialised in UP_LOCKED position")
+
+    while True:
+        show_menu()
+        choice = input("Enter command: ")
+
+        if choice == "1":
+            controller.command_gear_down()
+        elif choice == "2":
+            controller.command_gear_up()
+        elif choice == "3":
+            FaultInjector.fault = True
+            print("\n[SYSTEM] Fault injected")
+        elif choice == "4":
+            FaultInjector.fault = False
+            controller.clear_fault()
+        else:
+            print("\n Invalid command. Please try again")
+
+main()
