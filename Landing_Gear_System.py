@@ -29,6 +29,7 @@ class LandingGearController:
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{self.state.name}] {message}")
+        time.sleep(2) # time delay to improve readability
 
     # Function to clear faults
     def clear_fault(self):
@@ -95,9 +96,11 @@ class LandingGearController:
             self.state = GearState.UP_LOCKED
             self.log("Gear up and locked")
 
+    # Function to move gear DOWN
     def command_gear_down(self):
         self.move_gear(GearState.DOWN_LOCKED)
-
+   
+    # Function to move gear UP
     def command_gear_up(self):
         self.move_gear(GearState.UP_LOCKED)
 
@@ -124,15 +127,23 @@ def main():
         choice = input("Enter command: ")
 
         if choice == "1":
+            time.sleep(0.7)
             controller.command_gear_down()
+            time.sleep(1)
         elif choice == "2":
+            time.sleep(0.7)
             controller.command_gear_up()
+            time.sleep(1)
         elif choice == "3":
+            time.sleep(0.7)
             FaultInjector.fault = True
             print("\n[SYSTEM] Fault injected")
+            time.sleep(1)
         elif choice == "4":
+            time.sleep(0.7)
             FaultInjector.fault = False
             controller.clear_fault()
+            time.sleep(1)
         else:
             print("\n Invalid command. Please try again")
 
