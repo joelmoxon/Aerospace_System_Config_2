@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import time
+from datetime import datetime
 
 # Landing gear states
 class GearState(Enum):
@@ -16,7 +17,7 @@ class FaultInjector:
 
 class LandingGearController:
 
-    # Requirements PER-02 and PER-03
+    # Timing requirements from PER-02 and PER-03
     GEAR_DOWN_TIME = 5 # seconds
     GEAR_UP_TIME = 7 # seconds
 
@@ -24,9 +25,12 @@ class LandingGearController:
         self.state = GearState.UP_LOCKED
         self.previous_state = GearState.UP_LOCKED
 
+    # Log function with timestamp
     def log(self, message):
-        print(f"[{self.state.name}] {message}")
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{self.state.name}] {message}")
 
+    # Function to clear faults
     def clear_fault(self):
         if self.state == GearState.FAULT:
             self.state = self.previous_state
@@ -104,10 +108,11 @@ def show_menu():
     print("=" * 30)
     print("1. Gear DOWN")
     print("2. Gear UP")
-    print("3. Inject Fault")
+    print("3. Inject Hydraulic Fault")
     print("4. clear fault")
     print("=" * 30)
 
+# Function to initialise menu and run commands
 def main():
     controller = LandingGearController()
 
