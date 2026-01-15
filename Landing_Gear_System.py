@@ -22,8 +22,7 @@ class LandingGearController:
     GEAR_UP_TIME = 7 # seconds
 
     def __init__(self):
-        self.state = GearState.UP_LOCKED
-        self.previous_state = GearState.UP_LOCKED
+        self.state = GearState.DOWN_LOCKED
 
     # Log function with timestamp
     def log(self, message):
@@ -31,17 +30,20 @@ class LandingGearController:
         print(f"[{timestamp}] [{self.state.name}] {message}")
         time.sleep(2) # time delay to improve readability
 
-    # Function to clear faults
-    def clear_fault(self):
-        if self.state == GearState.FAULT:
-            self.state = self.previous_state
-            self.log("Fault cleared - system restored")
+    # Function to view faults
+    def view_fault(self):
+        if FaultInjector.fault:
+            print("\n[SYSTEM] *** HYDRAULIC FAULT ACTIVE ***")
+            print("[SYSTEM] Primary hydraulic pump failure detected")
+            print("[SYSTEM] Technician required before next flight")
+            time.sleep(3)
         else:
-            print("\n[SYSTEM] No fault to clear")
+            print("\n[SYSTEM] No active faults")
+            time.sleep(2)
 
     def move_gear(self, target_state):
          
-        #Gear DOWN sequence
+        # Gear DOWN sequence
         if target_state == GearState.DOWN_LOCKED:
             if self.state != GearState.UP_LOCKED:
                 self.log("Command rejected - Gear already DOWN")
@@ -53,23 +55,18 @@ class LandingGearController:
             # Check for fault during DOWN movement
             if FaultInjector.fault:
                 time.sleep(self.GEAR_DOWN_TIME)
-                self.log("*** ALERT: Gear down time exceeded normal time")
-                self.log("*** DIAGNOSIS: Low hydraulic pressure")
+                self.log("*** ALERT: Gear down time exceeded parameter")
+                self.log("*** ROOT CAUSE: Low hydraulic pressure - primary pump")
                 self.log("*** Activating backup hydraulic pump ***")
-                self.backup_pump_active = True
                 time.sleep(FaultInjector.fault_delay)
-                self.log("*** Operation complete ***")
-                self.backup_pump_active = False
-                FaultInjector.fault = False
-                self.log("*** Fault cleared ***")
+                self.log("*** Backup operation complete - hydraulic maintenance required ***")
             else:
                 time.sleep(self.GEAR_DOWN_TIME)
             
             self.state = GearState.DOWN_LOCKED
-            self.log ("Gear down and locked")
+            self.log("Gear down and locked")
 
-
-        #Gear UP sequence
+        # Gear UP sequence
         elif target_state == GearState.UP_LOCKED:
             if self.state != GearState.DOWN_LOCKED:
                 self.log("Command rejected - Gear already UP")
@@ -78,20 +75,18 @@ class LandingGearController:
             self.state = GearState.TRANSITIONING_UP
             self.log("Gear retracting...")
            
-        # Check for fault during UP movement
+            # Check for fault during UP movement
             if FaultInjector.fault:
                 time.sleep(self.GEAR_UP_TIME)
-                self.log("*** ALERT: Gear up time exceeded normal time")
-                self.log("*** DIAGNOSIS: Low hydraulic pressure")
-                self.log("*** Activating backup hydraulic pump ***")
-                self.backup_pump_active = True
-                time.sleep(FaultInjector.fault_delay)
-                self.log("*** Operation complete ***")
-                self.backup_pump_active = False
-                FaultInjector.fault = False
-                self.log("*** Fault cleared ***")
+                self.log("*** ALERT: Gear up time exceeded parameter")
+                self.log("*** ROOT CAUSE: Low hydraulic pressure - primary pump")
+                self.log("*** FAILSAFE: Gear retraction aborted ***")
+                self.state = GearState.DOWN_LOCKED
+                self.log("*** Gear remains DOWN in failsafe mode ***")
+                self.log("*** WARNING: Low hydraulic pressure remains - maintenance required ***")
+                return
             else:
-                time.sleep(self.GEAR_DOWN_TIME)
+                time.sleep(self.GEAR_UP_TIME)
 
             self.state = GearState.UP_LOCKED
             self.log("Gear up and locked")
@@ -105,25 +100,30 @@ class LandingGearController:
         self.move_gear(GearState.UP_LOCKED)
 
 # Control menu
-def show_menu():
+def show_menu(controller):
     print("\n" + "=" * 30)
     print("LANDING GEAR CONTROL SYSTEM")
+    print("=" * 30)
+    print(f"Current Position: {controller.state.name}")
     print("=" * 30)
     print("1. Gear DOWN")
     print("2. Gear UP")
     print("3. Inject Hydraulic Fault")
-    print("4. clear fault")
+    print("4. View Fault")
     print("=" * 30)
 
 # Function to initialise menu and run commands
 def main():
     controller = LandingGearController()
 
+    time.sleep(1)
     print("\n*** SYSTEM INITIALISING ***")
-    print("Landing gear initialised in UP_LOCKED position")
+    time.sleep(2)
+    print("Landing gear system initialised")
+    time.sleep(2)
 
     while True:
-        show_menu()
+        show_menu(controller)
         choice = input("Enter command: ")
 
         if choice == "1":
@@ -141,10 +141,9 @@ def main():
             time.sleep(1)
         elif choice == "4":
             time.sleep(0.7)
-            FaultInjector.fault = False
-            controller.clear_fault()
+            controller.view_fault()
             time.sleep(1)
         else:
-            print("\n Invalid command. Please try again")
+            print("\nInvalid command. Please try again")
 
 main()
