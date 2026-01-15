@@ -1,3 +1,29 @@
+"""
+===============================================================
+BAE SYSTEMS - LANDING GEAR CONTROL SYSTEM
+===============================================================
+
+System Name:        Landing Gear Control System (LGCS)
+Version:            1.0
+Classification:     Prototype 
+
+Created By:         Joel Moxon
+Date Created:       3rd January 2026
+Date Approved:      15th January 2026
+Approved By:        Graham Burvill
+
+Baseline ID:        LGCS-BL-1.0
+Language:           Python 
+
+Change History:
+---------------------------------------------------------------
+Version    Date           Author              Description
+---------------------------------------------------------------
+1.0      15/01/2026     Joel Moxon          Initial prototype 
+
+===============================================================
+"""
+
 from enum import Enum, auto
 import time
 from datetime import datetime
