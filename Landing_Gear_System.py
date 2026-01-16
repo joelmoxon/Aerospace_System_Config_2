@@ -23,7 +23,6 @@ Version    Date           Author              Description
 
 ===============================================================
 """
-
 from enum import Enum, auto
 import time
 from datetime import datetime
@@ -34,7 +33,6 @@ class GearState(Enum):
     TRANSITIONING_DOWN = auto()
     DOWN_LOCKED = auto()
     TRANSITIONING_UP = auto()
-    FAULT = auto()
 
 # Simulated fault injection
 class FaultInjector:
@@ -132,10 +130,11 @@ def show_menu(controller):
     print("=" * 30)
     print(f"Current Position: {controller.state.name}")
     print("=" * 30)
-    print("1. Gear DOWN")
-    print("2. Gear UP")
+    print("1. Gear UP")
+    print("2. Gear DOWN")
     print("3. Inject Hydraulic Fault")
-    print("4. View Fault")
+    print("4. View Faults")
+    print("5. Simulate System Reset")
     print("=" * 30)
 
 # Function to initialise menu and run commands
@@ -154,11 +153,11 @@ def main():
 
         if choice == "1":
             time.sleep(0.7)
-            controller.command_gear_down()
+            controller.command_gear_up()
             time.sleep(1)
         elif choice == "2":
             time.sleep(0.7)
-            controller.command_gear_up()
+            controller.command_gear_down()
             time.sleep(1)
         elif choice == "3":
             time.sleep(0.7)
@@ -169,6 +168,11 @@ def main():
             time.sleep(0.7)
             controller.view_fault()
             time.sleep(1)
+        elif choice == "5":
+            time.sleep(0.7)
+            FaultInjector.fault = False
+            controller = LandingGearController
+            main()
         else:
             print("\nInvalid command. Please try again")
 
